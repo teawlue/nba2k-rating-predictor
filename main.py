@@ -146,6 +146,7 @@ print(f"RMSE Lasso: {rmse_lasso:.2f}")
 # Получаем предсказания на обучающей выборке
 y_train_pred = pipeline.predict(X_train)
 errors = (y_train - y_train_pred) ** 2
+plt.figure(figsize=(8, 5))
 sns.histplot(np.sqrt(errors), bins=25, kde=True, color='#1DB954')
 plt.axvline(np.sqrt(errors).mean(), color='white', linestyle='--', label='Средняя ошибка')
 plt.title('Насколько модель ошибается в рейтинге игроков')
@@ -157,9 +158,9 @@ plt.show()
 
 # Берем 95-й квантиль ошибки
 threshold = np.quantile(errors, 0.95)
-mask = errors < threshold # Маска "хороших" треков
+mask = errors < threshold # Маска игроков без экстремальной ошибки
 
-# Оставляем только те треки, где ошибка была не слишком большой
+# Оставляем только тех игроков, где ошибка была не слишком большой
 X_train_clean = X_train[mask]
 y_train_clean = y_train[mask]
 
@@ -168,3 +169,42 @@ pipeline.fit(X_train_clean, y_train_clean)
 y_pred_clean = pipeline.predict(X_test)
 rmse_clean = np.sqrt(mean_squared_error(y_test, y_pred_clean))
 print(f"RMSE после удаления выбросов: {rmse_clean:.2f}")
+
+
+results = pd.DataFrame({
+    'Модель': [
+        'Baseline (среднее)',
+        'Ridge',
+        'Ridge + TEAM/SEASON',
+        'Lasso + TEAM/SEASON',
+        'Ridge после удаления выбросов'
+    ],
+    'RMSE': [
+        rmse_baseline,
+        rmse,
+        rmse_pipe,
+        rmse_lasso,
+        rmse_clean
+    ]
+}).sort_values('RMSE')
+
+best_model = results.iloc[0]
+
+print("\nИТОГОВОЕ СРАВНЕНИЕ МОДЕЛЕЙ")
+print(results.to_string(index=False, formatters={'RMSE': '{:.2f}'.format}))
+print(
+    f"\nЛучшая модель: {best_model['Модель']} "
+    f"с RMSE = {best_model['RMSE']:.2f}"
+)
+print(
+    f"Она ошибается в среднем примерно на {best_model['RMSE']:.2f} "
+    "пункта рейтинга игрока."
+)
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=results, x='RMSE', y='Модель', color='#1DB954')
+plt.title('Сравнение моделей по RMSE')
+plt.xlabel('RMSE: меньше — лучше')
+plt.ylabel('')
+plt.xlim(0, results['RMSE'].max() + 0.5)
+plt.show()
