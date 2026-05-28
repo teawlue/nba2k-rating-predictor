@@ -146,10 +146,12 @@ print(f"RMSE Lasso: {rmse_lasso:.2f}")
 # Получаем предсказания на обучающей выборке
 y_train_pred = pipeline.predict(X_train)
 errors = (y_train - y_train_pred) ** 2
-
-plt.figure(figsize=(8, 5))
-sns.histplot(errors, bins=20)
-plt.title('Распределение квадратов ошибок на обучающей выборке')
+sns.histplot(np.sqrt(errors), bins=25, kde=True, color='#1DB954')
+plt.axvline(np.sqrt(errors).mean(), color='white', linestyle='--', label='Средняя ошибка')
+plt.title('Насколько модель ошибается в рейтинге игроков')
+plt.xlabel('Ошибка в пунктах рейтинга')
+plt.ylabel('Количество игроков')
+plt.legend()
 plt.show()
 
 
