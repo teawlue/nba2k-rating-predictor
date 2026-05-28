@@ -1,18 +1,24 @@
-from .config import DATA_PATH, setup_environment
-from .data import get_numeric_features, load_data, prepare_features, split_data
+from .config import data_path, setup_environment
+from .data import (
+    get_numeric_features,
+    load_data,
+    prepare_features,
+    split_data,
+)
 from .modeling import (
-    build_preprocessor,
     train_baseline,
-    train_lasso_pipeline,
     train_ridge_numeric,
-    train_ridge_pipeline,
+    train_ridge_with_alpha,
     train_scaled_ridge,
     train_without_extreme_errors,
     tune_ridge_alpha,
 )
 from .plots import (
+    plot_correlation_matrix,
     plot_feature_importance,
+    plot_feature_vs_target,
     plot_model_comparison,
+    plot_rating_boxplot,
     plot_target_distribution,
     plot_train_errors,
 )
@@ -26,8 +32,12 @@ from .reporting import (
 def run_project():
     setup_environment()
 
-    data = load_data(DATA_PATH)
+    data = load_data(data_path)
+
     plot_target_distribution(data)
+    plot_correlation_matrix(data)
+    plot_feature_vs_target(data, 'PTS')
+    plot_rating_boxplot(data)
 
     x, y = prepare_features(data)
     x_train, x_test, y_train, y_test = split_data(x, y)
@@ -42,7 +52,7 @@ def run_project():
         numeric_features,
     )
 
-    _, weights_scaled, x_train_scaled, _ = train_scaled_ridge(
+    _, weights_scaled, x_train_scaled, x_test_scaled = train_scaled_ridge(
         x_train_num,
         x_test_num,
         y_train,
@@ -53,27 +63,18 @@ def run_project():
 
     grid_search = tune_ridge_alpha(x_train_scaled, y_train)
 
-    preprocessor = build_preprocessor(numeric_features)
-    pipeline, rmse_pipe = train_ridge_pipeline(
-        x_train,
-        x_test,
+    best_ridge, rmse_best_ridge = train_ridge_with_alpha(
+        x_train_scaled,
+        x_test_scaled,
         y_train,
         y_test,
-        preprocessor,
         grid_search.best_params_['alpha'],
-    )
-    _, rmse_lasso = train_lasso_pipeline(
-        x_train,
-        x_test,
-        y_train,
-        y_test,
-        preprocessor,
     )
 
     rmse_clean, errors = train_without_extreme_errors(
-        pipeline,
-        x_train,
-        x_test,
+        best_ridge,
+        x_train_scaled,
+        x_test_scaled,
         y_train,
         y_test,
     )
@@ -82,8 +83,7 @@ def run_project():
     results = build_results(
         rmse_baseline,
         rmse_ridge,
-        rmse_pipe,
-        rmse_lasso,
+        rmse_best_ridge,
         rmse_clean,
     )
     print_final_report(results, rmse_baseline)

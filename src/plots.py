@@ -3,13 +3,59 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from .config import TARGET_COLUMN
+from .config import target
 
 
 def plot_target_distribution(data):
     plt.figure(figsize=(8, 5))
-    sns.histplot(data[TARGET_COLUMN], bins=35)
+    sns.histplot(data[target], bins=35)
     plt.title('Распределение рейтингов')
+    plt.show()
+
+
+def plot_correlation_matrix(data):
+    numeric_data = data.select_dtypes(include='number')
+    correlation_matrix = numeric_data.corr()
+
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(
+        correlation_matrix,
+        cmap='viridis',
+        center=0,
+        linewidths=0.2,
+        cbar_kws={'label': 'Корреляция'},
+    )
+    plt.title('Корреляционная матрица числовых признаков')
+    plt.xticks(rotation=45, ha='right', fontsize=6)
+    plt.yticks(rotation=0, fontsize=6)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_feature_vs_target(data, feature):
+    if feature not in data.columns:
+        print(f"Колонка {feature} не найдена, график не построен.")
+        return
+
+    plt.figure(figsize=(8, 5))
+    sns.regplot(
+        data=data,
+        x=feature,
+        y=target,
+        scatter_kws={'alpha': 0.45, 's': 24, 'color': '#1DB954'},
+        line_kws={'color': '#FF4B4B', 'linewidth': 2},
+    )
+    plt.title(f'{feature} vs {target}')
+    plt.xlabel(feature)
+    plt.ylabel('Рейтинг NBA 2K')
+    plt.show()
+
+
+def plot_rating_boxplot(data):
+    plt.figure(figsize=(7, 4))
+    sns.boxplot(data=data, x=target, color='#1DB954')
+    plt.title('Boxplot рейтингов игроков')
+    plt.xlabel('Рейтинг NBA 2K')
     plt.show()
 
 

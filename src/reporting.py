@@ -25,30 +25,24 @@ FEATURE_LABELS = {
     'STL': 'перехваты',
     'BLK': 'блок-шоты',
     'PF': 'фолы',
-    'FP': 'fantasy points',
     'DD2': 'дабл-даблы',
     'TD3': 'трипл-даблы',
     '+/-': 'плюс-минус',
 }
 
 
-def build_results(rmse_baseline, rmse_ridge, rmse_pipe, rmse_lasso, rmse_clean):
-    return pd.DataFrame({
-        'Модель': [
-            'Baseline (среднее)',
-            'Ridge',
-            'Ridge + TEAM/SEASON',
-            'Lasso + TEAM/SEASON',
-            'Ridge после удаления выбросов',
-        ],
-        'RMSE': [
-            rmse_baseline,
-            rmse_ridge,
-            rmse_pipe,
-            rmse_lasso,
-            rmse_clean,
-        ],
-    }).sort_values('RMSE')
+def build_results(rmse_baseline, rmse_ridge, rmse_best_ridge, rmse_clean):
+    results = [
+        ['Baseline (среднее)', rmse_baseline],
+        ['Ridge', rmse_ridge],
+        ['Ridge с лучшим alpha', rmse_best_ridge],
+        ['Ridge после удаления выбросов', rmse_clean],
+    ]
+
+    results = pd.DataFrame(results, columns=['Модель', 'RMSE'])
+    results = results.sort_values('RMSE')
+
+    return results
 
 
 def format_feature_name(feature):

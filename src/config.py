@@ -4,12 +4,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-DATA_PATH = 'data/nba_rankings_2014-2020.csv'
-TARGET_COLUMN = 'rankings'
-DROP_COLUMNS = ['Unnamed: 0', 'PLAYER', TARGET_COLUMN]
-CATEGORICAL_FEATURES = ['TEAM', 'SEASON']
-RANDOM_STATE = 42
-TEST_SIZE = 0.2
+data_path = 'data/nba_rankings_2014-2020.csv'
+target = 'rankings'
+drop_cols = ['Unnamed: 0', 'PLAYER', 'rankings', 'SEASON', 'TEAM']
+random_state = 42
+test_size = 0.2
 
 
 def setup_environment():

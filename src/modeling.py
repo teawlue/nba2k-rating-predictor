@@ -1,13 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import Lasso, Ridge
+from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-from .config import CATEGORICAL_FEATURES
+from sklearn.preprocessing import StandardScaler
 
 
 def calculate_rmse(y_true, y_pred):
@@ -62,47 +58,18 @@ def tune_ridge_alpha(x_train_scaled, y_train):
     return grid_search
 
 
-def build_preprocessor(numeric_features):
-    return ColumnTransformer(
-        transformers=[
-            ('num', StandardScaler(), numeric_features),
-            ('cat', OneHotEncoder(handle_unknown='ignore'), CATEGORICAL_FEATURES),
-        ]
-    )
+def train_ridge_with_alpha(x_train_scaled, x_test_scaled, y_train, y_test, alpha):
+    model = Ridge(alpha=alpha)
+    model.fit(x_train_scaled, y_train)
 
-
-def train_ridge_pipeline(x_train, x_test, y_train, y_test, preprocessor, alpha):
-    pipeline = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', Ridge(alpha=alpha)),
-    ])
-
-    pipeline.fit(x_train, y_train)
-    y_pred = pipeline.predict(x_test)
+    y_pred = model.predict(x_test_scaled)
     rmse = calculate_rmse(y_test, y_pred)
 
-    return pipeline, rmse
+    return model, rmse
 
 
-def train_lasso_pipeline(x_train, x_test, y_train, y_test, preprocessor):
-    pipeline_lasso = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', Lasso(alpha=0.1)),
-    ])
-
-    pipeline_lasso.fit(x_train, y_train)
-
-    zero_weights = np.sum(pipeline_lasso.named_steps['model'].coef_ == 0)
-    total_weights = len(pipeline_lasso.named_steps['model'].coef_)
-    print(f"Lasso занулил {zero_weights} признаков из {total_weights}!")
-
-    rmse = calculate_rmse(y_test, pipeline_lasso.predict(x_test))
-
-    return pipeline_lasso, rmse
-
-
-def train_without_extreme_errors(pipeline, x_train, x_test, y_train, y_test):
-    y_train_pred = pipeline.predict(x_train)
+def train_without_extreme_errors(model, x_train, x_test, y_train, y_test):
+    y_train_pred = model.predict(x_train)
     errors = (y_train - y_train_pred) ** 2
 
     threshold = np.quantile(errors, 0.95)
@@ -111,8 +78,8 @@ def train_without_extreme_errors(pipeline, x_train, x_test, y_train, y_test):
     x_train_clean = x_train[mask]
     y_train_clean = y_train[mask]
 
-    pipeline.fit(x_train_clean, y_train_clean)
-    y_pred_clean = pipeline.predict(x_test)
+    model.fit(x_train_clean, y_train_clean)
+    y_pred_clean = model.predict(x_test)
     rmse_clean = calculate_rmse(y_test, y_pred_clean)
 
     return rmse_clean, errors
