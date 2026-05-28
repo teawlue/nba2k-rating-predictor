@@ -16,7 +16,8 @@ from sklearn.linear_model import Lasso
 
 #!target = 'rankings'
 
-# %config InlineBackend.figure_format = 'retina' #! спросить почему не работает
+plt.rcParams['figure.dpi'] = 150
+plt.rcParams['savefig.dpi'] = 300
 plt.style.use('dark_background')
 sns.set_theme(style='darkgrid', rc={'axes.facecolor': '#191414', 'figure.facecolor': '#191414', 'text.color': 'white', 'axes.labelcolor': 'white', 'xtick.color': 'white', 'ytick.color': 'white'})
 
@@ -24,6 +25,15 @@ import warnings
 warnings.filterwarnings('ignore')
 
 data = pd.read_csv('data/nba_rankings_2014-2020.csv')
+
+print("\nЭТАП 1. Загрузка и первичная проверка данных")
+print(f"Размер датасета: {data.shape[0]} строк, {data.shape[1]} колонки")
+print(f"Количество пропущенных значений: {data.isna().sum().sum()}")
+print(f"Количество полных дубликатов строк: {data.duplicated().sum()}")
+print(
+    "Диапазон target rankings: "
+    f"от {data['rankings'].min():.0f} до {data['rankings'].max():.0f}"
+)
 
 
 plt.figure(figsize=(8, 5))
@@ -34,9 +44,16 @@ plt.show()
 
 y = data['rankings']
 
+print("\nЭТАП 2. Очистка и подготовка признаков")
+print("Удаляем Unnamed: 0, потому что это технический индекс из CSV.")
+print("Удаляем PLAYER, потому что имя игрока является идентификатором, а не статистикой.")
+print("Отделяем rankings как target, чтобы не было утечки данных.")
+
 # Удаляем таргет и текстовые идентификаторы
 drop_cols = ["Unnamed: 0", "PLAYER", "rankings"]
 X = data.drop(columns=drop_cols)
+print(f"Удаленные колонки: {drop_cols}")
+print(f"Размер матрицы признаков после очистки: {X.shape[0]} строк, {X.shape[1]} колонок")
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -63,12 +80,10 @@ y_pred[:5]
 
 
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-print(f"RMSE на тесте: {rmse:.2f}")
 
 
 y_pred_baseline = np.full_like(y_test, y_train.mean())
 rmse_baseline = np.sqrt(mean_squared_error(y_test, y_pred_baseline))
-print(f"RMSE бейзлайна (просто среднее): {rmse_baseline:.2f}") 
 
 
 weights = pd.Series(model.coef_, index=numeric_features)
@@ -124,7 +139,6 @@ pipeline.fit(X_train, y_train)
 # Предсказываем
 y_pred_pipe = pipeline.predict(X_test)
 rmse_pipe = np.sqrt(mean_squared_error(y_test, y_pred_pipe))
-print(f"RMSE с категориальными признаками: {rmse_pipe:.2f}")
 
 
 pipeline_lasso = Pipeline([
@@ -140,7 +154,6 @@ total_weights = len(pipeline_lasso.named_steps['model'].coef_)
 
 print(f"Lasso занулил {zero_weights} признаков из {total_weights}!")
 rmse_lasso = np.sqrt(mean_squared_error(y_test, pipeline_lasso.predict(X_test)))
-print(f"RMSE Lasso: {rmse_lasso:.2f}")
 
 
 # Получаем предсказания на обучающей выборке
@@ -168,7 +181,6 @@ y_train_clean = y_train[mask]
 pipeline.fit(X_train_clean, y_train_clean)
 y_pred_clean = pipeline.predict(X_test)
 rmse_clean = np.sqrt(mean_squared_error(y_test, y_pred_clean))
-print(f"RMSE после удаления выбросов: {rmse_clean:.2f}")
 
 
 results = pd.DataFrame({
