@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from .config import target
+from .config import drop_cols, target
 
 
 def plot_target_distribution(data):
@@ -14,7 +14,11 @@ def plot_target_distribution(data):
 
 
 def plot_correlation_matrix(data):
-    numeric_data = data.select_dtypes(include='number')
+    cols_for_drop = drop_cols.copy()
+    cols_for_drop.remove(target)
+
+    data_for_corr = data.drop(columns=cols_for_drop)
+    numeric_data = data_for_corr.select_dtypes(include='number')
     correlation_matrix = numeric_data.corr()
 
     plt.figure(figsize=(8, 6))
@@ -87,7 +91,6 @@ def plot_model_comparison(results):
     plt.figure(figsize=(10, 5))
     sns.barplot(data=results, x='RMSE', y='Модель', color='#1DB954')
     plt.title('Сравнение моделей по RMSE')
-    plt.xlabel('RMSE: меньше — лучше')
     plt.ylabel('')
     plt.xlim(0, results['RMSE'].max() + 0.5)
     plt.show()
