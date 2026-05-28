@@ -209,8 +209,8 @@ print(
     f"с RMSE = {best_model['RMSE']:.2f}"
 )
 print(
-    f"Она ошибается в среднем примерно на {best_model['RMSE']:.2f} "
-    "пункта рейтинга игрока."
+    f"Модель ошибается в среднем примерно на {best_model['RMSE']:.2f} / {rmse_baseline:.2f} * 100% = {best_model['RMSE']/rmse_baseline*100:.2f}% "
+    "процентов от ошибки базовой модели, которая просто предсказывает среднее."
 )
 
 plt.figure(figsize=(10, 5))
