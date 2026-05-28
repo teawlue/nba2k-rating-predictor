@@ -1,4 +1,4 @@
-from src.nba_rankings.pipeline import run_project
+from src.pipeline import run_project
 
 
 if __name__ == '__main__':

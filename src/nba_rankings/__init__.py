@@ -1,1 +1,0 @@
-"""NBA rankings prediction project."""

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 from .config import TARGET_COLUMN
@@ -13,8 +14,15 @@ def plot_target_distribution(data):
 
 
 def plot_feature_importance(weights):
-    weights.sort_values(ascending=False).plot(kind='bar', figsize=(10, 5), color='#1DB954')
-    plt.title("Истинная важность признаков (после StandardScaler)")
+    top_positive = weights.sort_values(ascending=False).head(10)
+    top_negative = weights.sort_values(ascending=True).head(10)
+    selected_weights = pd.concat([top_positive, top_negative]).sort_values()
+    colors = np.where(selected_weights >= 0, '#1DB954', '#FF4B4B')
+
+    selected_weights.plot(kind='barh', figsize=(10, 7), color=colors)
+    plt.axvline(0, color='white', linewidth=1)
+    plt.title("Топ положительных и отрицательных признаков Ridge")
+    plt.xlabel('Коэффициент после StandardScaler')
     plt.show()
 
 

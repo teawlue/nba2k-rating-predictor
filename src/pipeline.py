@@ -16,7 +16,11 @@ from .plots import (
     plot_target_distribution,
     plot_train_errors,
 )
-from .reporting import build_results, print_final_report
+from .reporting import (
+    build_results,
+    print_feature_interpretation,
+    print_final_report,
+)
 
 
 def run_project():
@@ -45,6 +49,7 @@ def run_project():
         numeric_features,
     )
     plot_feature_importance(weights_scaled)
+    print_feature_interpretation(weights_scaled)
 
     grid_search = tune_ridge_alpha(x_train_scaled, y_train)
 
